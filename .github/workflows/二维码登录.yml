@@ -99,9 +99,6 @@ jobs:
           for f in qr/*.png; do
             echo "  🔗 https://github.com/${{ github.repository }}/releases/download/$TAG/$(basename "$f")"
           done
-          echo ""
-          echo "  🌐 或打开完整网页（含所有账号大图）："
-          echo "  🔗 https://htmlpreview.github.io/?https://github.com/${{ github.repository }}/releases/download/$TAG/login.html"
           echo "══════════════════════════════════════════════════════════"
 
       # ═══ 备用：HTML 仍上传为 artifact（万一 Release 失败兜底）═══
@@ -139,7 +136,18 @@ jobs:
           PAT: ${{ secrets.PAT }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
-      # ═══ 清理：仅保留最近 5 个二维码 Release ═══
+      # ═══ 清理：登录完成后立即删除本次 Release（不堆积）═══
+      - name: 清理本次二维码 Release
+        if: ${{ always() && steps.publish.outcome == 'success' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="qr-${{ github.run_id }}"
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" -y 2>/dev/null \
+            && echo "✅ 已删除本次 Release: $TAG" || echo "⚠️ Release $TAG 不存在或已删除"
+
+      # ═══ 兜底：清理残留的旧二维码 Release（保留最近 3 个）═══
       - name: 清理旧的二维码 Release
         if: ${{ always() }}
         continue-on-error: true
@@ -147,8 +155,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release list --repo "$GITHUB_REPOSITORY" --limit 100 \
-            | awk '$1 ~ /^qr-/ {print $1}' | head -n -5 \
+            | awk '$1 ~ /^qr-/ {print $1}' | head -n -3 \
             | while read t; do
-                gh release delete "$t" --repo "$GITHUB_REPOSITORY" -y
+                gh release delete "$t" --repo "$GITHUB_REPOSITORY" -y 2>/dev/null
                 echo "已删除旧 Release: $t"
-              done
+              done || true

@@ -57,33 +57,10 @@ async function buildQr(url, index, total) {
   const dataUrl = await QRCode.toDataURL(url, { width: 320, margin: 2 })
   const pngBase64 = dataUrl.replace(/^data:image\/png;base64,/, '')
 
-  // ── 3) 写入 Step Summary（Actions Summary 标签页查看）──
-  appendSummary([
-    `## 🎵 酷狗音乐扫码登录${header}`,
-    '',
-    '### 👇 用酷狗音乐 APP 扫描下方二维码',
-    '',
-    `<img src="${dataUrl}" alt="扫码登录${header}" width="300" style="border:2px solid #d0d7de;border-radius:12px;padding:12px;background:#fff;" />`,
-    '',
-    '> ⏳ 二维码有效期约 **2 分钟**，请尽快扫描。',
-    '',
-    '**备用链接**（复制到酷狗 App 打开）：',
-    '',
-    `<code>${url}</code>`,
-    '',
-    '---',
-    '',
-  ].join('\n'))
-
-  // ── 4) 日志输出：明确指引去哪里看图 ──
+  // ── 3) 日志输出：指引去直链步骤 ──
   printMagenta(`\n═══ 第 ${index}/${total} 个二维码已生成 ═══`)
   console.log('')
-  console.log('  📱 扫码方式（按推荐顺序）：')
-  console.log('     ① 查看后续「发布二维码图片直链」步骤的链接 → 浏览器打开即显示图片 → 直接扫')
-  console.log('     ② 点击本页面上方「Summary」标签查看图片')
-  console.log('     ③ 复制下方链接到酷狗 App 内打开：')
-  console.log('')
-  console.log(`     ${url}`)
+  console.log('  🔗 请查看下一步「发布二维码图片直链」输出的链接，浏览器打开即可直接扫码')
   console.log('')
 
   return { dataUrl, url, header, index }
@@ -211,8 +188,8 @@ async function genMode() {
     }
 
     fs.writeFileSync(KEYS_FILE, JSON.stringify({ number, keys }))
-  printMagenta(`\n✅ 已生成 ${number} 个二维码。`)
-  printMagenta(`🔗 请查看下一步「发布二维码图片直链」输出的可点击链接，浏览器打开即可直接扫码（无需下载解压）！`)
+    printMagenta(`\n✅ 已生成 ${number} 个二维码。`)
+    printMagenta(`🔗 请查看下一步「发布二维码图片直链」输出的可点击链接，浏览器打开即可直接扫码！`)
   } catch (e) {
     const msg = e && e.message ? e.message : String(e)
     console.error(`::error::二维码生成失败：${msg}`)
